@@ -65,3 +65,12 @@ def test_live_evals_check_citations_and_facts(index):
         {"question": "How much does the sourdough loaf cost?", "expect": "refuse"},
     ]
     assert [r.ok for r in run_evals(golden, index, judge)] == [True, False, False]
+
+
+def test_the_home_page_injects_example_questions_safely(index, monkeypatch):
+    from pagewise import server
+
+    monkeypatch.setattr(server, "EXAMPLES", ["Where is it?", "</script><b>x</b>"])
+    page = client(index).get("/").text
+    assert "__EXAMPLES__" not in page and "Where is it?" in page and "</script><b>" not in page
+    assert 'fetch("api/ask"' in page  # relative, so it works behind a proxy path like /assistant/

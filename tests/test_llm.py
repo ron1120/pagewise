@@ -73,3 +73,8 @@ def test_api_errors_become_model_unavailable():
     error = anthropic.APIConnectionError(request=request)
     with pytest.raises(ModelUnavailable):
         judge_with(FakeMessages(error=error)).judge("How much?", HITS)
+
+
+def test_a_missing_api_key_is_a_model_failure_not_a_crash():
+    with pytest.raises(ModelUnavailable):
+        judge_with(FakeMessages(error=anthropic.AnthropicError("Could not resolve authentication method"))).judge("q", HITS)

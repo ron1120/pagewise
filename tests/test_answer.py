@@ -66,3 +66,21 @@ def test_whitespace_in_questions_is_normalised(index):
     judge = ScriptedJudge(good())
     ask("How   much\n does the sourdough loaf   cost?", index, judge)
     assert judge.calls[0][0] == "How much does the sourdough loaf cost?"
+
+
+def test_refusals_name_the_configured_source(monkeypatch):
+    import importlib
+
+    import pagewise.answer as answer_module
+
+    monkeypatch.setenv("PAGEWISE_SOURCE_NAME", "the project docs")
+    import pagewise.config as config
+
+    importlib.reload(config)
+    importlib.reload(answer_module)
+    try:
+        assert answer_module.NOT_COVERED == "I can't answer that from the project docs."
+    finally:
+        monkeypatch.delenv("PAGEWISE_SOURCE_NAME")
+        importlib.reload(config)
+        importlib.reload(answer_module)

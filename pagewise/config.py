@@ -12,6 +12,9 @@ PAGES_FILE = os.path.join(DATA_DIR, "pages.json")
 INDEX_DIR = os.path.join(DATA_DIR, "index")
 COLLECTION = "pagewise"
 
+# How the knowledge base is named in refusals: "I can't answer that from <SOURCE_NAME>."
+SOURCE_NAME = os.environ.get("PAGEWISE_SOURCE_NAME", "this site's pages")
+
 # Chunking.
 CHUNK_CHARS = 900
 

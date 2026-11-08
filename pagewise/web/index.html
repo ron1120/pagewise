@@ -55,7 +55,7 @@
   </div>
 </form>
 <script>
-  const EXAMPLES = ["What has Ron built?", "Which projects use Terraform?", "How does the triage agent avoid guessing?", "What is the weather in Paris?"];
+  const EXAMPLES = __EXAMPLES__;
   const log = document.getElementById("log"), form = document.getElementById("form");
   const input = document.getElementById("q"), send = document.getElementById("send");
 
@@ -105,7 +105,7 @@
     bubble("q", question);
     const pending = bubble("a", "Looking through the pages...");
     try {
-      const res = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question }) });
+      const res = await fetch("api/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question }) });
       const data = await res.json();
       pending.remove();
       if (!res.ok) { bubble("a refused", typeof data.detail === "string" ? data.detail : "That question could not be sent."); return; }

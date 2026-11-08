@@ -5,6 +5,7 @@ Because a public endpoint spends the owner's API credit, every client IP is limi
 
 from __future__ import annotations
 
+import json
 import os
 import time
 from collections import defaultdict, deque
@@ -23,6 +24,14 @@ from .store import Index
 WEB_DIR = Path(__file__).parent / "web"
 RATE_LIMIT = int(os.environ.get("PAGEWISE_RATE_LIMIT", "10"))  # questions per IP per minute
 WINDOW = 60.0
+
+# Example questions shown as buttons on the chat page; PAGEWISE_EXAMPLES="Q one?|Q two?" replaces them.
+EXAMPLES = [q.strip() for q in os.environ.get("PAGEWISE_EXAMPLES", "").split("|") if q.strip()] or [
+    "What has Ron built?",
+    "Which projects use Terraform?",
+    "How does the triage agent avoid guessing?",
+    "What is the weather in Paris?",
+]
 
 
 class AskRequest(BaseModel):
@@ -49,7 +58,9 @@ def create_app(index: Index, judge: Judge, rate_limit: int = RATE_LIMIT) -> Fast
 
     @app.get("/", response_class=HTMLResponse)
     def home() -> str:
-        return (WEB_DIR / "index.html").read_text(encoding="utf-8")
+        page = (WEB_DIR / "index.html").read_text(encoding="utf-8")
+        # "<" is escaped so an example can never close the <script> tag it is placed in.
+        return page.replace("__EXAMPLES__", json.dumps(EXAMPLES).replace("<", "\\u003c"))
 
     @app.get("/api/health")
     def health() -> dict:

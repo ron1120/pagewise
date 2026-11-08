@@ -69,7 +69,7 @@ class ClaudeJudge:
                 )
             else:
                 response = self.client.messages.create(**params)
-        except anthropic.APIError as exc:
+        except anthropic.AnthropicError as exc:  # includes APIError, and a missing API key
             raise ModelUnavailable(f"model call failed: {exc.__class__.__name__}") from exc
 
         if response.stop_reason == "refusal":

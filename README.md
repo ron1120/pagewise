@@ -95,8 +95,32 @@ off-topic question scores at most 0.21 against a gate of 0.28, while the weakest
 | `PAGEWISE_RATE_LIMIT` | `10` | Questions per IP per minute on the web server |
 | `PAGEWISE_CORS_ORIGINS` | none | Comma-separated origins allowed to call the API from a browser |
 | `PAGEWISE_FALLBACKS` | off | Set to `1` to opt into server-side refusal fallback |
+| `PAGEWISE_SOURCE_NAME` | `this site's pages` | How refusals name the source, e.g. `the project docs` |
+| `PAGEWISE_EXAMPLES` | portfolio examples | Example questions on the chat page, separated by `\|` |
 | `PAGEWISE_DATA_DIR` | `data` | Where pages and the index live |
 | `PAGEWISE_EMBEDDER` | local model | `hash` uses a tiny offline embedder (tests and smoke runs) |
+
+## Using it on documentation, in Docker
+
+pagewise can read a folder of Markdown files instead of crawling a site, and it ships a Dockerfile, so it can run as
+the help assistant of another project:
+
+```bash
+python -m pagewise docs ./my-project --base-url https://github.com/me/my-project/blob/main   # one page per .md file
+python -m pagewise index
+```
+
+```bash
+docker build -t pagewise .
+docker run -p 8010:8000 -e ANTHROPIC_API_KEY \
+  -e PAGEWISE_DOCS_DIR=/docs -e PAGEWISE_DOCS_BASE_URL=https://github.com/me/my-project/blob/main \
+  -v "$PWD/my-project:/docs:ro" pagewise
+```
+
+The entrypoint builds the index when the container starts, then serves the chat page and `POST /api/ask`. Citations
+link to `--base-url` plus the file path. The chat page uses relative URLs, so it also works behind a proxy path such
+as `/assistant/`. A working example is the Task Manager app's `docker-compose.yml`
+(`github.com/ron1120/task-manager-infrastructure`), where it is the `pagewise` service.
 
 ## Crawling politely
 
@@ -107,6 +131,7 @@ requests, follows the sitemap when there is one, and stops at `--max-pages`.
 
 ```
 pagewise/crawl.py      fetch pages, extract readable text grouped under headings
+pagewise/docs.py       read Markdown files as pages (for documentation)
 pagewise/chunk.py      split into small chunks that remember their page and section
 pagewise/store.py      ChromaDB index + swappable embedders
 pagewise/retrieve.py   hybrid search, scoring and the not-covered gate
@@ -114,9 +139,9 @@ pagewise/llm.py        the Claude call: structured JSON verdict
 pagewise/answer.py     the pipeline and its verification checks
 pagewise/evals.py      golden-question runner (offline and live)
 pagewise/server.py     FastAPI app, rate limit, chat page
-pagewise/cli.py        crawl, index, ask, chat, serve, eval
+pagewise/cli.py        crawl, docs, index, ask, chat, serve, eval
 evals/golden.json      the 28 golden questions
-tests/                 43 offline tests (fake site, fake model, no network)
+tests/                 51 offline tests (fake site, fake model, no network)
 ```
 
 ## Roadmap

@@ -5,13 +5,13 @@ from __future__ import annotations
 import re
 from dataclasses import asdict, dataclass, field
 
-from .config import MAX_QUESTION_CHARS, MIN_SCORE
+from .config import MAX_QUESTION_CHARS, MIN_SCORE, SOURCE_NAME
 from .llm import Judge, ModelUnavailable
 from .retrieve import Hit, is_covered, retrieve
 from .store import Index
 
-NOT_COVERED = "I can't answer that from this site's pages."
-NEEDS_REVIEW = "I couldn't produce a reliable answer to that. Please look at the site directly."
+NOT_COVERED = f"I can't answer that from {SOURCE_NAME}."
+NEEDS_REVIEW = "I couldn't produce a reliable answer to that. Please check the source directly."
 
 ANSWERED = "answered"
 NOT_COVERED_STATUS = "not_covered"
