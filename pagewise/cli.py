@@ -11,7 +11,7 @@ from .answer import ANSWERED, ask
 from .build import build_index, load_pages, open_index, save_pages
 from .config import INDEX_DIR, PAGES_FILE
 from .crawl import crawl
-from .docs import load_docs
+from .docs import load_repo
 from .evals import load_golden, report, run_evals
 from .llm import ClaudeJudge
 
@@ -37,11 +37,12 @@ def cmd_crawl(args) -> int:
 
 
 def cmd_docs(args) -> int:
-    pages = load_docs(args.directory, args.base_url)
+    pages = load_repo(args.directory, args.base_url, include_code=args.code)
     save_pages(pages, args.out)
-    print(f"Read {len(pages)} Markdown files -> {args.out}")
-    for p in pages:
-        print(f"  {p.url}  ({len(p.sections)} sections)")
+    print(f"Read {len(pages)} pages from {args.directory} -> {args.out}")
+    files = sorted({p.url.split("#")[0] for p in pages})
+    for f in files:
+        print(f"  {f}")
     return 0 if pages else 1
 
 
@@ -102,8 +103,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--out", default=PAGES_FILE)
     p.set_defaults(func=cmd_crawl)
 
-    p = sub.add_parser("docs", help="read a folder of Markdown files instead of crawling a site")
+    p = sub.add_parser("docs", help="read a project folder (Markdown, and with --code its code) instead of crawling a site")
     p.add_argument("directory")
+    p.add_argument("--code", action="store_true", help="also read code and config files, in windows of about 30 lines")
     p.add_argument("--base-url", required=True, help="URL that the folder is published at, used for citations")
     p.add_argument("--out", default=PAGES_FILE)
     p.set_defaults(func=cmd_docs)

@@ -1,6 +1,6 @@
 import os
 
-from pagewise.docs import load_docs, parse_markdown
+from pagewise.docs import code_windows, load_docs, load_repo, parse_markdown
 
 MD = """# Task Manager
 
@@ -66,3 +66,58 @@ def test_load_docs_builds_urls_from_the_base_url_and_skips_junk(tmp_path):
         "https://github.com/me/repo/blob/main/README.md",
         "https://github.com/me/repo/blob/main/ansible/README.md",
     ]
+
+
+def _project(tmp_path):
+    (tmp_path / "README.md").write_text("# App\nreadme text")
+    (tmp_path / "main.py").write_text("print('hello')\n")
+    (tmp_path / "Dockerfile").write_text("FROM python:3.12\n")
+    (tmp_path / "compose.yml").write_text("services:\n  web:\n    ports: ['8000:8000']\n")
+    (tmp_path / "env.example").write_text("SECRET_KEY=change-me\n")
+    (tmp_path / ".github" / "workflows").mkdir(parents=True)
+    (tmp_path / ".github" / "workflows" / "ci.yml").write_text("on: push\n")
+    # none of these may ever be read
+    (tmp_path / ".env").write_text("ANTHROPIC_API_KEY=real-secret-value\n")
+    (tmp_path / "server.pem").write_text("-----BEGIN PRIVATE KEY-----")
+    (tmp_path / "prod.tfvars").write_text("db_password = \"hunter2\"\n")
+    (tmp_path / "terraform.tfstate").write_text("{}")
+    (tmp_path / "package-lock.json").write_text("{}")
+    (tmp_path / "notes.txt").write_text("plain text file")
+    (tmp_path / ".git").mkdir()
+    (tmp_path / ".git" / "config.py").write_text("x = 1")
+    return tmp_path
+
+
+def test_without_include_code_only_markdown_is_read(tmp_path):
+    pages = load_repo(str(_project(tmp_path)), "https://h/blob/main", include_code=False)
+    assert [p.url for p in pages] == ["https://h/blob/main/README.md"]
+
+
+def test_with_include_code_config_and_code_are_read_with_line_anchored_urls(tmp_path):
+    pages = load_repo(str(_project(tmp_path)), "https://h/blob/main", include_code=True)
+    urls = sorted(p.url for p in pages)
+    assert urls == [
+        "https://h/blob/main/.github/workflows/ci.yml#L1-L1",
+        "https://h/blob/main/Dockerfile#L1-L1",
+        "https://h/blob/main/README.md",
+        "https://h/blob/main/compose.yml#L1-L3",
+        "https://h/blob/main/env.example#L1-L1",
+        "https://h/blob/main/main.py#L1-L1",
+    ]
+
+
+def test_secrets_and_junk_are_never_read(tmp_path):
+    pages = load_repo(str(_project(tmp_path)), "https://h/blob/main", include_code=True)
+    everything = " ".join(t for p in pages for _, t in p.sections) + " ".join(p.url for p in pages)
+    for forbidden in ["real-secret-value", "PRIVATE KEY", "hunter2", "tfstate", "package-lock", "plain text file", ".env"]:
+        assert forbidden not in everything
+
+
+def test_code_files_are_split_into_windows_that_cover_every_line():
+    text = "\n".join(f"line {n}" for n in range(1, 101))
+    pages = code_windows("https://h/f.py", "f.py", text)
+    assert len(pages) > 1
+    spans = [p.sections[0][0] for p in pages]
+    assert spans[0] == "lines 1-" + spans[0].split("-")[1] and pages[0].url.endswith("#L1-L" + spans[0].split("-")[1])
+    covered = sum(int(s.split(" ")[1].split("-")[1]) - int(s.split(" ")[1].split("-")[0]) + 1 for s in spans)
+    assert covered == 100 and all(p.title == "f.py" for p in pages)

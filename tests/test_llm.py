@@ -42,6 +42,12 @@ def test_message_numbers_the_sources_and_keeps_the_question_separate():
     assert message.rstrip().endswith("<question>\nHow much?\n</question>")
 
 
+def test_a_correction_is_passed_to_the_model_in_its_own_block():
+    message = build_message("How much?", HITS, correction="Your answer states ['35'].")
+    assert message.endswith("<correction>\nYour answer states ['35'].\n</correction>")
+    assert "<correction>" not in build_message("How much?", HITS)
+
+
 def test_request_asks_for_structured_json_with_the_rules_in_the_system_prompt():
     messages = FakeMessages(reply(json.dumps({"answerable": True, "answer": "28 shekels.", "source_ids": [1]})))
     verdict = judge_with(messages).judge("How much?", HITS)
@@ -78,3 +84,9 @@ def test_api_errors_become_model_unavailable():
 def test_a_missing_api_key_is_a_model_failure_not_a_crash():
     with pytest.raises(ModelUnavailable):
         judge_with(FakeMessages(error=anthropic.AnthropicError("Could not resolve authentication method"))).judge("q", HITS)
+
+
+def test_no_credentials_at_all_is_also_a_model_failure():
+    error = TypeError('"Could not resolve authentication method. Expected one of api_key or auth_token to be set."')
+    with pytest.raises(ModelUnavailable):
+        judge_with(FakeMessages(error=error)).judge("q", HITS)

@@ -39,6 +39,32 @@ def test_a_number_the_sources_do_not_contain_is_rejected(index):
     assert ask("How much does the sourdough loaf cost?", index, ScriptedJudge(invented)).status == NEEDS_REVIEW_STATUS
 
 
+def test_the_model_gets_one_chance_to_correct_an_invented_number(index):
+    judge = ScriptedJudge([good("A sourdough loaf costs 35 shekels."), good("A sourdough loaf costs 28 shekels.")])
+    result = ask("How much does the sourdough loaf cost?", index, judge)
+    assert result.status == ANSWERED and result.text == "A sourdough loaf costs 28 shekels."
+    assert len(judge.calls) == 2 and judge.calls[0][2] is None
+    assert "35" in judge.calls[1][2] and "only facts that appear in the sources" in judge.calls[1][2]
+
+
+def test_a_second_mistake_is_not_retried_again(index):
+    judge = ScriptedJudge([good("It costs 35 shekels."), good("It costs 40 shekels.")])
+    assert ask("How much does the sourdough loaf cost?", index, judge).status == NEEDS_REVIEW_STATUS
+    assert len(judge.calls) == 2
+
+
+def test_the_model_can_correct_a_missing_citation_too(index):
+    judge = ScriptedJudge([good(ids=[]), good(ids=[1])])
+    result = ask("How much does the sourdough loaf cost?", index, judge)
+    assert result.status == ANSWERED and "cite at least one source" in judge.calls[1][2]
+
+
+def test_a_correct_answer_costs_only_one_model_call(index):
+    judge = ScriptedJudge(good())
+    ask("How much does the sourdough loaf cost?", index, judge)
+    assert len(judge.calls) == 1
+
+
 def test_numbers_are_compared_without_thousands_separators_or_trailing_dots():
     from pagewise.chunk import Chunk
     from pagewise.retrieve import Hit

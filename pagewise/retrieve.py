@@ -24,8 +24,22 @@ class Hit:
     keywords: float
 
 
+def _singular(word: str) -> str:
+    """Plain plural stripping, so 'creates' matches 'create' and 'endpoints' matches 'endpoint'."""
+    if len(word) <= 3 or not word.isalpha():
+        return word
+    if word.endswith("ies"):
+        return word[:-3] + "y"
+    if word.endswith(("xes", "zes", "ches", "shes", "sses")):
+        return word[:-2]
+    if word.endswith("s") and not word.endswith(("ss", "us", "is")):
+        return word[:-1]
+    return word
+
+
 def tokens(text: str) -> set[str]:
-    return {w for w in re.findall(r"[a-z0-9][a-z0-9+#.-]*", text.lower()) if w not in _STOPWORDS and len(w) > 1}
+    words = re.findall(r"[a-z0-9][a-z0-9+#.-]*", text.lower())
+    return {_singular(w) for w in words if w not in _STOPWORDS and len(w) > 1}
 
 
 def _keyword_score(query_tokens: set[str], chunk: Chunk) -> float:

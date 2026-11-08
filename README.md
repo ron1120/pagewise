@@ -95,6 +95,7 @@ off-topic question scores at most 0.21 against a gate of 0.28, while the weakest
 | `PAGEWISE_RATE_LIMIT` | `10` | Questions per IP per minute on the web server |
 | `PAGEWISE_CORS_ORIGINS` | none | Comma-separated origins allowed to call the API from a browser |
 | `PAGEWISE_FALLBACKS` | off | Set to `1` to opt into server-side refusal fallback |
+| `PAGEWISE_TOP_K` | `4` | How many passages are sent to the model |
 | `PAGEWISE_SOURCE_NAME` | `this site's pages` | How refusals name the source, e.g. `the project docs` |
 | `PAGEWISE_EXAMPLES` | portfolio examples | Example questions on the chat page, separated by `\|` |
 | `PAGEWISE_DATA_DIR` | `data` | Where pages and the index live |
@@ -102,18 +103,23 @@ off-topic question scores at most 0.21 against a gate of 0.28, while the weakest
 
 ## Using it on documentation, in Docker
 
-pagewise can read a folder of Markdown files instead of crawling a site, and it ships a Dockerfile, so it can run as
-the help assistant of another project:
+pagewise can read a project folder instead of crawling a site, and it ships a Dockerfile, so it can run as the chat
+bot of another project. By default it reads the Markdown files (one page each). With `--code` (or
+`PAGEWISE_DOCS_CODE=1` in Docker) it also reads code and config files in windows of about 30 lines, and a citation links
+to the exact lines (`...#L10-L40`). Only an allowlist of file types is read (Python, JS, YAML, Terraform, shell, Dockerfiles,
+config), and anything that looks like a secret is skipped by name: `.env*`, keys and certificates, `*.tfvars`,
+`*.tfstate`, lockfiles. Template files such as `env.example` are read.
 
 ```bash
-python -m pagewise docs ./my-project --base-url https://github.com/me/my-project/blob/main   # one page per .md file
+python -m pagewise docs ./my-project --base-url https://github.com/me/my-project/blob/main --code
 python -m pagewise index
 ```
 
 ```bash
 docker build -t pagewise .
 docker run -p 8010:8000 -e ANTHROPIC_API_KEY \
-  -e PAGEWISE_DOCS_DIR=/docs -e PAGEWISE_DOCS_BASE_URL=https://github.com/me/my-project/blob/main \
+  -e PAGEWISE_DOCS_DIR=/docs -e PAGEWISE_DOCS_CODE=1 \
+  -e PAGEWISE_DOCS_BASE_URL=https://github.com/me/my-project/blob/main \
   -v "$PWD/my-project:/docs:ro" pagewise
 ```
 
@@ -141,7 +147,7 @@ pagewise/evals.py      golden-question runner (offline and live)
 pagewise/server.py     FastAPI app, rate limit, chat page
 pagewise/cli.py        crawl, docs, index, ask, chat, serve, eval
 evals/golden.json      the 28 golden questions
-tests/                 51 offline tests (fake site, fake model, no network)
+tests/                 62 offline tests (fake site, fake model, no network)
 ```
 
 ## Roadmap

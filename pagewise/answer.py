@@ -48,6 +48,20 @@ def unsupported_numbers(answer: str, cited: list[Hit]) -> set[str]:
     return _numbers(answer) - allowed
 
 
+def _problem(verdict: dict, hits: list[Hit]) -> str | None:
+    """What is wrong with a verdict, worded as feedback for the model, or None when it is acceptable."""
+    ids = sorted(set(verdict["source_ids"]))
+    if not ids or any(i < 1 or i > len(hits) for i in ids):
+        return f"Your answer must cite at least one source id between 1 and {len(hits)}; yours cited {verdict['source_ids']}."
+    bad = unsupported_numbers(verdict["answer"], [hits[i - 1] for i in ids])
+    if bad:
+        return (
+            f"Your answer states {sorted(bad)}, which none of the sources you cited contain. "
+            "Rewrite it using only facts that appear in the sources."
+        )
+    return None
+
+
 def _source(n: int, hit: Hit) -> Source:
     excerpt = hit.chunk.text if len(hit.chunk.text) <= 280 else hit.chunk.text[:277].rstrip() + "..."
     return Source(n, hit.chunk.url, hit.chunk.title, hit.chunk.heading, excerpt)
@@ -74,11 +88,17 @@ def ask(question: str, index: Index, judge: Judge, min_score: float = MIN_SCORE)
         return Answer(question, NOT_COVERED_STATUS, NOT_COVERED)
 
     # The model must cite real sources it was shown, and may not introduce numbers the sources do not contain.
-    ids = sorted(set(verdict["source_ids"]))
-    if not ids or any(i < 1 or i > len(hits) for i in ids):
-        return Answer(question, NEEDS_REVIEW_STATUS, NEEDS_REVIEW)
-    cited = [hits[i - 1] for i in ids]
-    if unsupported_numbers(verdict["answer"], cited):
-        return Answer(question, NEEDS_REVIEW_STATUS, NEEDS_REVIEW)
+    # If it slips, it gets exactly one chance to correct itself; a second slip is shown as "couldn't answer".
+    problem = _problem(verdict, hits)
+    if problem:
+        try:
+            verdict = judge.judge(question, hits, correction=problem)
+        except ModelUnavailable:
+            return Answer(question, NEEDS_REVIEW_STATUS, NEEDS_REVIEW)
+        if not verdict["answerable"] or not verdict["answer"].strip():
+            return Answer(question, NOT_COVERED_STATUS, NOT_COVERED)
+        if _problem(verdict, hits):
+            return Answer(question, NEEDS_REVIEW_STATUS, NEEDS_REVIEW)
 
+    ids = sorted(set(verdict["source_ids"]))
     return Answer(question, ANSWERED, verdict["answer"].strip(), [_source(i, hits[i - 1]) for i in ids])

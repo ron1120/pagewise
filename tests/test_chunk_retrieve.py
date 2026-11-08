@@ -20,7 +20,14 @@ def test_chunks_respect_the_size_limit_and_have_stable_unique_ids():
 
 
 def test_tokens_drop_stopwords():
-    assert tokens("What are the opening hours?") == {"opening", "hours"}
+    assert tokens("What are the opening hours?") == {"opening", "hour"}
+
+
+def test_plurals_and_verb_forms_match_their_base_word():
+    assert tokens("creates") == tokens("create") == {"create"}
+    assert tokens("endpoints tasks ports") == {"endpoint", "task", "port"}
+    assert tokens("queries boxes classes") == {"query", "box", "class"}
+    assert tokens("status jwt 8000 https") == {"status", "jwt", "8000", "http"}
 
 
 def test_retrieval_finds_the_right_page(index):

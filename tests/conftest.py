@@ -40,13 +40,14 @@ def index(tmp_path):
 
 
 class ScriptedJudge:
-    """Returns a canned verdict, or raises ModelUnavailable. Records whether it was called."""
+    """Returns canned verdicts (one, or a list used in order), or raises ModelUnavailable. Records every call."""
 
     def __init__(self, verdict=None, error: bool = False) -> None:
-        self.verdict, self.error, self.calls = verdict, error, []
+        self.verdicts = verdict if isinstance(verdict, list) else [verdict]
+        self.error, self.calls = error, []
 
-    def judge(self, question, hits):
-        self.calls.append((question, hits))
+    def judge(self, question, hits, correction=None):
+        self.calls.append((question, hits, correction))
         if self.error:
             raise ModelUnavailable("scripted failure")
-        return self.verdict
+        return self.verdicts[min(len(self.calls) - 1, len(self.verdicts) - 1)]

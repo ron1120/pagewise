@@ -19,7 +19,7 @@ SOURCE_NAME = os.environ.get("PAGEWISE_SOURCE_NAME", "this site's pages")
 CHUNK_CHARS = 900
 
 # Retrieval. Chunks are ranked by 0.7 * vector similarity + 0.3 * keyword overlap.
-TOP_K = 4
+TOP_K = int(os.environ.get("PAGEWISE_TOP_K", "4"))  # passages sent to the model
 CANDIDATES = 12
 VECTOR_WEIGHT = 0.7
 # A question is "not covered" when even its best chunk is weaker than this.
