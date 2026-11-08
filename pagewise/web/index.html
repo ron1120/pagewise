@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>pagewise</title>
+<style>
+  :root {
+    --bg: #fbfaf7; --fg: #1d1d1b; --muted: #6b6a66; --line: #e4e1da; --card: #ffffff;
+    --accent: #205441; --accent-fg: #ffffff; --refuse: #8a5a00; --refuse-bg: #fff6e0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #151614; --fg: #ecebe6; --muted: #9a9890; --line: #2c2d2a; --card: #1d1e1b;
+      --accent: #3f9a76; --accent-fg: #0d1b15; --refuse: #f0c36a; --refuse-bg: #2a2314;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 32px 16px 120px; }
+  h1 { font-size: 1.4rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .chips button { background: var(--card); color: var(--fg); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font: inherit; font-size: .9rem; cursor: pointer; }
+  .chips button:hover { border-color: var(--accent); }
+  #log { display: flex; flex-direction: column; gap: 16px; }
+  .q { align-self: flex-end; background: var(--accent); color: var(--accent-fg); padding: 8px 14px; border-radius: 16px 16px 4px 16px; max-width: 85%; }
+  .a { background: var(--card); border: 1px solid var(--line); border-radius: 16px 16px 16px 4px; padding: 12px 14px; max-width: 95%; }
+  .a.refused { background: var(--refuse-bg); border-color: var(--refuse); color: var(--refuse); }
+  .a p { margin: 0; white-space: pre-wrap; }
+  .sources { margin: 10px 0 0; padding: 10px 0 0; border-top: 1px solid var(--line); list-style: none; font-size: .88rem; color: var(--muted); }
+  .sources li { margin: 4px 0; }
+  .sources a { color: var(--accent); }
+  form { position: fixed; left: 0; right: 0; bottom: 0; background: var(--bg); border-top: 1px solid var(--line); padding: 12px 16px; }
+  form div { max-width: 720px; margin: 0 auto; display: flex; gap: 8px; }
+  input { flex: 1; min-width: 0; background: var(--card); color: var(--fg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font: inherit; }
+  input:focus { outline: 2px solid var(--accent); border-color: transparent; }
+  form button { background: var(--accent); color: var(--accent-fg); border: 0; border-radius: 10px; padding: 0 18px; font: inherit; font-weight: 600; cursor: pointer; }
+  form button:disabled { opacity: .5; cursor: default; }
+  .note { color: var(--muted); font-size: .85rem; margin-top: 24px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Ask this site</h1>
+  <p class="sub">Answers come only from the site's own pages, and each one shows its sources. If the pages don't say, it says so.</p>
+  <div class="chips" id="chips"></div>
+  <div id="log" aria-live="polite"></div>
+  <p class="note">Powered by pagewise: retrieval over the crawled pages, then Claude writes a short cited answer.</p>
+</main>
+<form id="form">
+  <div>
+    <input id="q" type="text" maxlength="500" placeholder="Ask a question about the site" autocomplete="off" required>
+    <button id="send" type="submit">Ask</button>
+  </div>
+</form>
+<script>
+  const EXAMPLES = ["What has Ron built?", "Which projects use Terraform?", "How does the triage agent avoid guessing?", "What is the weather in Paris?"];
+  const log = document.getElementById("log"), form = document.getElementById("form");
+  const input = document.getElementById("q"), send = document.getElementById("send");
+
+  for (const text of EXAMPLES) {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = text;
+    b.onclick = () => { input.value = text; form.requestSubmit(); };
+    document.getElementById("chips").append(b);
+  }
+
+  function bubble(cls, text) {
+    const div = document.createElement("div");
+    div.className = cls;
+    const p = document.createElement("p");
+    p.textContent = text;                       // textContent only: answers are never parsed as HTML
+    div.append(p);
+    log.append(div);
+    div.scrollIntoView({ block: "end", behavior: "smooth" });
+    return div;
+  }
+
+  function addSources(div, sources) {
+    if (!sources.length) return;
+    const ul = document.createElement("ul");
+    ul.className = "sources";
+    for (const s of sources) {
+      const li = document.createElement("li");
+      li.append(`[${s.n}] `);
+      if (/^https?:\/\//.test(s.url)) {
+        const a = document.createElement("a");
+        a.href = s.url; a.target = "_blank"; a.rel = "noopener";
+        a.textContent = s.heading && s.heading !== s.title ? `${s.title} > ${s.heading}` : s.title;
+        li.append(a);
+      } else {
+        li.append(s.title);
+      }
+      ul.append(li);
+    }
+    div.append(ul);
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const question = input.value.trim();
+    if (!question) return;
+    input.value = ""; send.disabled = true;
+    bubble("q", question);
+    const pending = bubble("a", "Looking through the pages...");
+    try {
+      const res = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question }) });
+      const data = await res.json();
+      pending.remove();
+      if (!res.ok) { bubble("a refused", typeof data.detail === "string" ? data.detail : "That question could not be sent."); return; }
+      const div = bubble(data.status === "answered" ? "a" : "a refused", data.text);
+      addSources(div, data.sources);
+    } catch {
+      pending.remove();
+      bubble("a refused", "Something went wrong reaching the server. Please try again.");
+    } finally {
+      send.disabled = false; input.focus();
+    }
+  });
+</script>
+</body>
+</html>

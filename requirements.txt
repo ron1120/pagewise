@@ -1,0 +1,6 @@
+anthropic
+beautifulsoup4
+chromadb
+fastapi
+requests
+uvicorn

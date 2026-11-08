@@ -1,0 +1,586 @@
+[
+  {
+    "url": "https://ron-shitrit.pages.dev/",
+    "title": "Ron Shitrit",
+    "sections": [
+      [
+        "Ron Shitrit",
+        "DevOps & AI Engineer"
+      ],
+      [
+        "Ron Shitrit",
+        "AWS"
+      ],
+      [
+        "Ron Shitrit",
+        "Kubernetes"
+      ],
+      [
+        "Ron Shitrit",
+        "Terraform"
+      ],
+      [
+        "Ron Shitrit",
+        "Docker"
+      ],
+      [
+        "Ron Shitrit",
+        "Helm"
+      ],
+      [
+        "Ron Shitrit",
+        "ArgoCD"
+      ],
+      [
+        "Ron Shitrit",
+        "Jenkins"
+      ],
+      [
+        "Ron Shitrit",
+        "GitHub Actions"
+      ],
+      [
+        "Ron Shitrit",
+        "Ansible"
+      ],
+      [
+        "Ron Shitrit",
+        "Prometheus"
+      ],
+      [
+        "Ron Shitrit",
+        "Grafana"
+      ],
+      [
+        "Ron Shitrit",
+        "Python"
+      ],
+      [
+        "Ron Shitrit",
+        "FastAPI"
+      ],
+      [
+        "Ron Shitrit",
+        "PostgreSQL"
+      ],
+      [
+        "Ron Shitrit",
+        "Claude API"
+      ],
+      [
+        "Ron Shitrit",
+        "RAG"
+      ],
+      [
+        "Ron Shitrit",
+        "ChromaDB"
+      ],
+      [
+        "Ron Shitrit",
+        "AI Agents"
+      ],
+      [
+        "Ron Shitrit",
+        "About me"
+      ],
+      [
+        "Ron Shitrit",
+        "I was born in Israel 26 years ago. Technology excites me, I'm obsessed with innovation and understanding how things work behind the scenes. Living with severe ADHD shaped how I see the world — systems and code just happen to be the best way I've found to bring ideas to life."
+      ],
+      [
+        "Ron Shitrit",
+        "Based in South & Tel Aviv 🇮🇱"
+      ],
+      [
+        "Ron Shitrit",
+        "Contact"
+      ],
+      [
+        "Ron Shitrit",
+        "ronss1120@gmail.com"
+      ]
+    ]
+  },
+  {
+    "url": "https://ron-shitrit.pages.dev/work/",
+    "title": "Work | Ron Shitrit",
+    "sections": [
+      [
+        "Work | Ron Shitrit",
+        "Selected work"
+      ],
+      [
+        "Work",
+        "Cloud platforms, AI systems, marketing automation and apps."
+      ],
+      [
+        "01 DevOps & AI",
+        "2026 Workflow Engine Platform on AWS EKS The full path from git push to running pods for a workflow automation engine and its CLI: Jenkins CI/CD, Terraform and Ansible provisioning, and in-cluster monitoring. AWS · Terraform · Ansible · Jenkins · Kubernetes"
+      ],
+      [
+        "01 DevOps & AI",
+        "2026 CI Failure Triage Agent An AI agent that does the first pass when a GitHub Actions run fails and posts the likely cause to Slack in about 25 seconds. It's read-only and leaves unclear cases to a person. Tested on a demo pipeline with planted failures (12 of 12 correct). Python · GitHub Actions · Claude API · Slack"
+      ],
+      [
+        "01 DevOps & AI",
+        "2026 Vera: RAG & Multi‑Agent Assistant A finance assistant for a made-up company that answers only from company documents. Every answer comes with its source, and it refuses rather than guesses. Python · RAG · ChromaDB · GitHub Actions"
+      ],
+      [
+        "01 DevOps & AI",
+        "2026 AWS EKS GitOps Platform Terraform creates the infrastructure, and ArgoCD keeps the cluster in sync with git and reverts manual changes. CI and monitoring are next on the list. AWS · Terraform · Helm · ArgoCD · Kubernetes"
+      ],
+      [
+        "02 Marketing & Automations",
+        "2024–26 Lead Generation Campaigns Ran 100+ Meta lead-generation campaigns for small businesses. Meta Ads"
+      ],
+      [
+        "02 Marketing & Automations",
+        "2024–26 Landing Pages Built and maintained 10+ landing pages hosted on Cloudflare. Cloudflare"
+      ],
+      [
+        "02 Marketing & Automations",
+        "2024–26 WhatsApp Automation Built and ran WhatsApp API systems on EC2 for business clients. AWS"
+      ],
+      [
+        "03 Apps & Tools",
+        "2026 Dock Minimize A tiny macOS menu-bar app: click the Dock icon of the app in front and its window minimizes, like the Windows taskbar. Swift · macOS Accessibility API"
+      ],
+      [
+        "03 Apps & Tools",
+        "Contact"
+      ],
+      [
+        "03 Apps & Tools",
+        "ronss1120@gmail.com"
+      ]
+    ]
+  },
+  {
+    "url": "https://ron-shitrit.pages.dev/work/workflow-engine-eks/",
+    "title": "Workflow Engine Platform on AWS EKS | Ron Shitrit",
+    "sections": [
+      [
+        "Workflow Engine Platform on AWS EKS | Ron Shitrit",
+        "2026"
+      ],
+      [
+        "Workflow Engine Platform on AWS EKS",
+        "The full path from git push to running pods for a workflow automation engine and its command-line tool."
+      ],
+      [
+        "Some context",
+        "SeyoAWE is an existing workflow automation engine with a Python command-line tool. The application isn't mine. My part was everything around it: packaging it, testing every change, provisioning the cloud, deploying to Kubernetes and monitoring it once it runs."
+      ],
+      [
+        "How it works",
+        "A push to GitHub starts a Jenkins pipeline. The engine and the CLI each have their own, and each checks what actually changed."
+      ],
+      [
+        "How it works",
+        "The code is linted with flake8, then goes through unit, integration and end-to-end tests."
+      ],
+      [
+        "How it works",
+        "Docker images are built and pushed to Amazon ECR and Docker Hub, and the release is tagged on GitHub."
+      ],
+      [
+        "How it works",
+        "When CI succeeds, the CD job compares the new image digest in ECR with what the pods are running."
+      ],
+      [
+        "How it works",
+        "If there's something new, Kustomize writes an overlay with the new tags, kubectl applies it to EKS, and the job waits for the rollout to finish."
+      ],
+      [
+        "How it works",
+        "Prometheus and Grafana run inside the cluster and scrape the workloads. If a pipeline fails, a message goes to Slack."
+      ],
+      [
+        "No credentials in Jenkins",
+        "Jenkins reaches AWS through its EC2 instance profile. The Docker Hub login and GitHub token are read from AWS Secrets Manager when a pipeline runs."
+      ],
+      [
+        "Deploy only when something changed",
+        "The CD job checks image digests first, so a pipeline run with no new image doesn't touch the cluster."
+      ],
+      [
+        "The whole setup is code",
+        "Terraform creates the Jenkins server, the EKS cluster and IAM, and Ansible configures Jenkins with its plugins and seed jobs. Nothing depends on clicking around in a console."
+      ],
+      [
+        "Where it stands",
+        "The pipelines run end to end. A failed deploy alerts Slack, but it doesn't roll back on its own yet."
+      ],
+      [
+        "Where it stands",
+        "AWS · Terraform · Ansible · Jenkins · Docker · Kubernetes · Kustomize · Prometheus · Grafana"
+      ]
+    ]
+  },
+  {
+    "url": "https://ron-shitrit.pages.dev/work/ci-triage-agent/",
+    "title": "CI Failure Triage Agent | Ron Shitrit",
+    "sections": [
+      [
+        "CI Failure Triage Agent | Ron Shitrit",
+        "2026"
+      ],
+      [
+        "CI Failure Triage Agent",
+        "An AI agent that does the first pass when a GitHub Actions run fails, and posts the likely cause to Slack in about 25 seconds."
+      ],
+      [
+        "Some context",
+        "When a pipeline fails, someone has to open the run and dig through the log to work out what happened. Is it a real bug, a flaky test, an infrastructure problem or a dependency issue? It's repetitive work, it interrupts whatever that person was doing, and a lot of the answers are the same ones as last week."
+      ],
+      [
+        "Some context",
+        "So I built an agent that does that first pass and hands the engineer a diagnosis to check, with the evidence next to it."
+      ],
+      [
+        "How it works",
+        "CI fails, and GitHub starts the triage workflow."
+      ],
+      [
+        "How it works",
+        "The agent fetches the failed jobs' logs through the API. It never checks out or runs the failed code."
+      ],
+      [
+        "How it works",
+        "Timestamps and terminal codes are stripped, and anything that looks like a secret is redacted from the full text."
+      ],
+      [
+        "How it works",
+        "Rules catch the clear-cut cases, like a network timeout, a full disk or a package that can't be resolved. Those need no model call."
+      ],
+      [
+        "How it works",
+        "Everything else goes to Claude as a log excerpt of at most 12K characters, and the answer comes back as structured JSON."
+      ],
+      [
+        "How it works",
+        "The diagnosis goes to Slack with its confidence, the log lines behind it, a next step and a link to the run."
+      ],
+      [
+        "Read-only on purpose",
+        "It never reruns jobs, edits code or deploys anything, and it needs only read permissions. The engineer stays in charge."
+      ],
+      [
+        "It's allowed to say it doesn't know",
+        "Anything unclear, refused or unparseable becomes \"needs human review\". If the model is down, that message still gets posted, so a failure never goes quiet."
+      ],
+      [
+        "Logs are untrusted input",
+        "Anyone who can trigger a pipeline can influence its log. The model is told never to follow instructions found in a log, and Slack output is escaped so a log can't inject mentions or links."
+      ],
+      [
+        "A bug that taught me something",
+        "In early runs the demo logs printed the failure's label, so the model could simply read the answer. I switched to neutral case codes, and a test now fails if a label word ever reaches the model's input."
+      ],
+      [
+        "Where it stands",
+        "It works end to end on a demo pipeline with planted failures: 12 of 12 diagnosed correctly, about 25 seconds to Slack, roughly $0.017 per model diagnosis, and 86 offline tests. Those are 4 planted failures repeated, so they show the system works, not how accurate it is on messy real ones. Testing on real failure history is next."
+      ],
+      [
+        "Where it stands",
+        "Python · GitHub Actions · Claude API · Slack · pytest"
+      ]
+    ]
+  },
+  {
+    "url": "https://ron-shitrit.pages.dev/work/vera/",
+    "title": "Vera: RAG & Multi-Agent Assistant | Ron Shitrit",
+    "sections": [
+      [
+        "Vera: RAG & Multi-Agent Assistant | Ron Shitrit",
+        "2026"
+      ],
+      [
+        "Vera: RAG & Multi‑Agent Assistant",
+        "A finance assistant that answers only from company documents, cites every answer, and refuses rather than guesses."
+      ],
+      [
+        "Some context",
+        "In finance, a wrong number that sounds confident is worse than no answer. Vera is a prototype assistant for a made-up company, with made-up documents, built around that idea. It answers budget and variance questions from closed, published documents, always with its source. Ask for a forecast or a competitor's margin and it refuses. Ask about a month that hasn't closed and it escalates."
+      ],
+      [
+        "How it works",
+        "Every question goes to the intake agent first, which decides if it's in scope."
+      ],
+      [
+        "How it works",
+        "Out-of-scope questions are refused or escalated right there, before the document store is ever searched."
+      ],
+      [
+        "How it works",
+        "The analyst agent retrieves documents with vector search in ChromaDB, plus a keyword rerank."
+      ],
+      [
+        "How it works",
+        "The drafter agent writes the answer using only the retrieved text."
+      ],
+      [
+        "How it works",
+        "The reviewer agent checks for missing citations and forward-looking claims, and can send a flawed draft back for one retry."
+      ],
+      [
+        "The structure enforces the rule",
+        "\"Never guess\" isn't only a line in a prompt. On the refused paths the search never runs, so there's nothing to guess from."
+      ],
+      [
+        "Tested like software",
+        "A set of 16 questions with known answers screens every run for invented numbers, missing citations, forward-looking claims and wrong departments. It runs in GitHub Actions on every push, and all 16 pass."
+      ],
+      [
+        "A false alarm worth fixing",
+        "The reviewer's first version flagged normal finance language, like \"capital project requests\", as a prediction. I rewrote its checks to look for what a leaked forecast actually sounds like."
+      ],
+      [
+        "Where it stands",
+        "The pipeline and evals work. Right now the agents are rule-based Python and answers are composed directly from retrieved text, with no live model call. The model routing is designed but not connected yet: a fast tier for intake and retrieval, and a stronger one for drafting and review."
+      ],
+      [
+        "Where it stands",
+        "Python · RAG · ChromaDB · GitHub Actions"
+      ]
+    ]
+  },
+  {
+    "url": "https://ron-shitrit.pages.dev/work/eks-gitops-platform/",
+    "title": "AWS EKS GitOps Platform | Ron Shitrit",
+    "sections": [
+      [
+        "AWS EKS GitOps Platform | Ron Shitrit",
+        "2026"
+      ],
+      [
+        "AWS EKS GitOps Platform",
+        "A production-style AWS platform where Terraform creates the infrastructure and ArgoCD keeps the cluster in sync with git."
+      ],
+      [
+        "Some context",
+        "I wanted a platform where git is the single source of truth: what's in the repo is what runs in the cluster. It runs a small task manager app with a FastAPI backend and a React frontend, and this repository holds the infrastructure and deployment side of it."
+      ],
+      [
+        "How it works",
+        "Terraform modules create the VPC, the EKS cluster and a PostgreSQL database on RDS, plus ECR repositories and the app's secrets."
+      ],
+      [
+        "How it works",
+        "A bootstrap script installs NGINX Ingress and ArgoCD with Helm, then applies the ArgoCD applications."
+      ],
+      [
+        "How it works",
+        "ArgoCD reads the Helm charts straight from the git repo and deploys the backend and frontend."
+      ],
+      [
+        "How it works",
+        "To ship a new version, I push a new image and change its tag in git. ArgoCD picks it up from there."
+      ],
+      [
+        "How it works",
+        "NGINX Ingress serves both from one host: / goes to the frontend and /api goes to the backend."
+      ],
+      [
+        "Self-healing deployments",
+        "ArgoCD's self-heal is on, so a manual kubectl edit gets reverted. The only way to change the cluster is through git."
+      ],
+      [
+        "Private by default",
+        "The worker nodes and the database sit in private subnets. Only the load balancer faces the internet."
+      ],
+      [
+        "Built with the bill in mind",
+        "EKS, NAT and RDS cost money even when idle, so it uses one shared NAT gateway, and one script tears the whole stack down when I'm not using it."
+      ],
+      [
+        "Where it stands",
+        "The infrastructure, GitOps setup and app charts are done. A GitHub Actions pipeline for the app, monitoring with Prometheus, Grafana and Loki, and remote Terraform state are still on the list."
+      ],
+      [
+        "Where it stands",
+        "AWS · Terraform · Kubernetes · Helm · ArgoCD · NGINX Ingress · PostgreSQL"
+      ]
+    ]
+  },
+  {
+    "url": "https://ron-shitrit.pages.dev/work/lead-generation/",
+    "title": "Lead Generation Campaigns | Ron Shitrit",
+    "sections": [
+      [
+        "Lead Generation Campaigns | Ron Shitrit",
+        "2024–26"
+      ],
+      [
+        "Lead Generation Campaigns",
+        "Ran 100+ Meta lead-generation campaigns for small businesses."
+      ],
+      [
+        "Lead Generation Campaigns",
+        "Real data · Meta Ads Manager"
+      ],
+      [
+        "Lead Generation Campaigns",
+        "Screenshot from my Meta Ads Manager account."
+      ],
+      [
+        "Start from the numbers",
+        "Work out what a lead is worth to the client, then set a target cost per lead that keeps the campaign profitable."
+      ],
+      [
+        "Match the goal to how the client sells",
+        "WhatsApp conversations when the sale happens in chat, instant lead forms for quote requests, and landing pages when the offer needs explaining."
+      ],
+      [
+        "Test, then scale",
+        "Launch several ad versions on small daily budgets, turn off the ones that cost too much, and move the budget to the winners."
+      ],
+      [
+        "Creatives made for the feed",
+        "Short videos and images made for each offer, with the hook in the first seconds."
+      ],
+      [
+        "Answer every lead fast",
+        "New leads get an automatic WhatsApp reply right away, so fewer of them go cold (see WhatsApp Automation )."
+      ],
+      [
+        "Answer every lead fast",
+        "Meta Ads · Meta Ads Manager"
+      ]
+    ]
+  },
+  {
+    "url": "https://ron-shitrit.pages.dev/work/landing-pages/",
+    "title": "Landing Pages | Ron Shitrit",
+    "sections": [
+      [
+        "Landing Pages | Ron Shitrit",
+        "2024–26"
+      ],
+      [
+        "Landing Pages",
+        "Built and maintained 10+ landing pages hosted on Cloudflare."
+      ],
+      [
+        "Landing Pages",
+        "Sample designs of the kinds of pages I built."
+      ],
+      [
+        "Built for each client",
+        "Built landing pages around each client's business and offer, so every page had one clear goal."
+      ],
+      [
+        "Made for ads",
+        "Designed the pages to turn ad clicks into leads: mobile-first, fast to load, one clear call to action and a short lead form."
+      ],
+      [
+        "Developed and maintained",
+        "Developed, published and maintained the pages on Cloudflare, and kept them up to date as offers and campaigns changed."
+      ],
+      [
+        "Developed and maintained",
+        "Cloudflare"
+      ]
+    ]
+  },
+  {
+    "url": "https://ron-shitrit.pages.dev/work/whatsapp-automation/",
+    "title": "WhatsApp Automation | Ron Shitrit",
+    "sections": [
+      [
+        "WhatsApp Automation | Ron Shitrit",
+        "2024–26"
+      ],
+      [
+        "WhatsApp Automation",
+        "Built and ran WhatsApp API systems on EC2 for business clients."
+      ],
+      [
+        "WhatsApp Automation",
+        "Real data · AWS EC2 & WhatsApp"
+      ],
+      [
+        "WhatsApp Automation",
+        "Chat applications running in production, deployed and maintained by me, with private details blurred."
+      ],
+      [
+        "What I did",
+        "Built, deployed and maintained EC2 servers running a WhatsApp application for WhatsApp API business clients."
+      ],
+      [
+        "What I did",
+        "Automated messaging and managed multiple WhatsApp accounts from the API."
+      ],
+      [
+        "What I did",
+        "Handled the API setup end to end."
+      ],
+      [
+        "What I did",
+        "The AWS panel shows the setup: five EC2 instances in the il-central-1 region, one shared browser instance and four workers (two t3.large, two t3.medium), all running with their status checks passing."
+      ],
+      [
+        "What I did",
+        "AWS"
+      ]
+    ]
+  },
+  {
+    "url": "https://ron-shitrit.pages.dev/work/dock-minimize/",
+    "title": "Dock Minimize | Ron Shitrit",
+    "sections": [
+      [
+        "Dock Minimize | Ron Shitrit",
+        "2026"
+      ],
+      [
+        "Dock Minimize",
+        "A tiny macOS menu-bar app that brings the Windows taskbar behavior to the Dock: click the icon of the app in front and its window minimizes."
+      ],
+      [
+        "Dock Minimize",
+        "Illustration of the behavior, not a screen recording."
+      ],
+      [
+        "Some context",
+        "On a Mac, clicking the Dock icon of an app that's already in front does nothing. On the Windows taskbar the same click minimizes the window. This app adds that behavior. It lives in the menu bar and has three options: turn it on or off, choose what a click does (minimize the front window, all windows, or hide the app), and launch at login."
+      ],
+      [
+        "How it works",
+        "A listen-only event tap watches left mouse clicks. It only observes them and never blocks them."
+      ],
+      [
+        "How it works",
+        "On mouse-down, the Accessibility API finds the Dock icon under the cursor and checks whether its app is in front with a visible window, before the Dock reacts."
+      ],
+      [
+        "How it works",
+        "On a short, stationary mouse-up, the window is minimized through the accessibility API, after a short delay so the Dock's own reopen event doesn't undo it."
+      ],
+      [
+        "How it works",
+        "Background apps, minimized or hidden apps, apps with no windows, full-screen windows, the Trash and folders keep the normal macOS behavior."
+      ],
+      [
+        "Observe, never block",
+        "Because clicks are only watched, dragging icons, the long-press menu, right-click and modifier clicks all keep working as usual."
+      ],
+      [
+        "No polling",
+        "It only wakes up when you click. On my Mac (macOS 26.2, Apple Silicon) it uses about 12 MB of memory and 0% CPU when idle, and the app is about 150 KB."
+      ],
+      [
+        "Easy to build and to remove",
+        "No dependencies, no Xcode project, no changes to system protection and nothing injected into the Dock. One script builds and installs it, and another removes the app, its settings and its permissions."
+      ],
+      [
+        "Where it stands",
+        "It runs on my Mac (macOS 26.2, Apple Silicon). It needs macOS 13 or later and is installed by building it from source, so there is no download yet."
+      ],
+      [
+        "Where it stands",
+        "Swift · macOS Accessibility API · CGEventTap"
+      ]
+    ]
+  }
+]

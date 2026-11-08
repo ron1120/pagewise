@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+.env.*
+
+# The vector index is rebuilt by `pagewise index`; the crawled pages in data/pages.json are kept.
+data/index/
