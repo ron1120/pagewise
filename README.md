@@ -6,6 +6,11 @@ If the site doesn't say, pagewise says so instead of guessing.
 It crawls a site, indexes the text, and answers through retrieval plus Claude. The "never guess" rule is enforced
 by the code around the model, not just by a line in the prompt.
 
+![pagewise as the chat button of my Task Manager project, answering "How do I run the tests?" with a link to the README section it came from](docs/demo.jpg)
+
+*pagewise running as the chat bot of a real application, answering from that repository's own files. Claude wrote
+the answer, and the link under it is the source.*
+
 ## Quickstart
 
 ```bash
@@ -65,13 +70,37 @@ python -m pagewise eval --live   # full pipeline with Claude: right page cited, 
 **What is measured:** offline, 28/28 pass. For the 18 answerable questions the right page is in the top 4, and every
 off-topic question scores at most 0.21 against a gate of 0.28, while the weakest answerable one scores 0.43.
 
+<!-- TODO(live-eval): after running `python -m pagewise eval --live` (needs ANTHROPIC_API_KEY), add the result here and
+     update the "not measured yet" list below. Paste the numbers exactly as the run printed them, for example:
+
+     **Live result (YYYY-MM-DD, claude-sonnet-5-5):** N/18 answerable questions answered with the right page cited and the
+     expected facts, N/10 off-topic or uncovered questions refused. Estimated cost: $X.XXXX total, $0.00XX per answered question.
+-->
+
 **What is not measured yet:**
-- **The live path has not been run against the real API.** The tests exercise the request and the answer checks with a
-  fake model, so the shape of the call and every refusal path is covered, but accuracy with Claude is untested until
-  `pagewise eval --live` has been run.
+- **The live eval has not been run.** The tests exercise the request and the answer checks with a fake model, so the
+  shape of the call and every refusal path is covered. I have also used the pipeline with the real model on a second
+  corpus (a code repository) and it answered correctly, but those were spot checks and are not scored. Accuracy with
+  Claude is not measured until `pagewise eval --live` has been run.
 - The gate threshold was tuned on the same 28 questions it is scored on. Treat 28/28 as "works on the demo set", not as
   a general accuracy figure.
-- Only one site (a small portfolio) has been tried.
+- Only two sources have been tried: a small portfolio site and a code repository.
+
+## Cost
+
+Every answer carries what it cost: the number of model calls, the tokens, and an estimated dollar figure.
+
+- A question refused before the model (off-topic) makes **no call and costs nothing**.
+- A normal answer is one call. If the answer checks fail, the one corrective retry adds a second call, and its cost is added.
+- A call that fails or is declined can still use tokens, and those are counted too.
+- `pagewise ask` prints a line such as `(1 model call(s), 1843 tokens in, 96 out, about $0.0046)`, the web API returns
+  `usage` and `cost_usd` with each answer, and `pagewise eval --live` prints a total and the average per answered question.
+- The dollar figure is an **estimate** from the prices in `PRICES` in `pagewise/config.py` (USD per million tokens). Check
+  the provider's current price list before quoting it, and add a model to `PRICES` to price it. A model that isn't listed
+  reports tokens but no dollar figure.
+
+Cost per answer depends on the model (`PAGEWISE_MODEL`), how many passages are sent (`PAGEWISE_TOP_K`) and the effort setting
+(`PAGEWISE_EFFORT`). Measured cost per answer: not published yet, because it comes from the live eval run.
 
 ## Known limits
 
@@ -147,7 +176,7 @@ pagewise/evals.py      golden-question runner (offline and live)
 pagewise/server.py     FastAPI app, rate limit, chat page
 pagewise/cli.py        crawl, docs, index, ask, chat, serve, eval
 evals/golden.json      the 28 golden questions
-tests/                 62 offline tests (fake site, fake model, no network)
+tests/                 71 offline tests (fake site, fake model, no network)
 ```
 
 ## Roadmap

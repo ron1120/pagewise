@@ -27,8 +27,9 @@ class FakeMessages:
         return self.response
 
 
-def reply(text, stop_reason="end_turn"):
-    return SimpleNamespace(stop_reason=stop_reason, content=[SimpleNamespace(type="text", text=text)])
+def reply(text, stop_reason="end_turn", input_tokens=1200, output_tokens=80):
+    usage = SimpleNamespace(input_tokens=input_tokens, output_tokens=output_tokens)
+    return SimpleNamespace(stop_reason=stop_reason, content=[SimpleNamespace(type="text", text=text)], usage=usage)
 
 
 def judge_with(messages):
@@ -51,7 +52,8 @@ def test_a_correction_is_passed_to_the_model_in_its_own_block():
 def test_request_asks_for_structured_json_with_the_rules_in_the_system_prompt():
     messages = FakeMessages(reply(json.dumps({"answerable": True, "answer": "28 shekels.", "source_ids": [1]})))
     verdict = judge_with(messages).judge("How much?", HITS)
-    assert verdict == {"answerable": True, "answer": "28 shekels.", "source_ids": [1]}
+    assert verdict == {"answerable": True, "answer": "28 shekels.", "source_ids": [1],
+                       "usage": {"input_tokens": 1200, "output_tokens": 80}}
     sent = messages.kwargs
     assert sent["model"] == "test-model" and sent["system"] == llm.SYSTEM_PROMPT
     assert sent["output_config"]["format"] == {"type": "json_schema", "schema": llm.SCHEMA}
@@ -90,3 +92,13 @@ def test_no_credentials_at_all_is_also_a_model_failure():
     error = TypeError('"Could not resolve authentication method. Expected one of api_key or auth_token to be set."')
     with pytest.raises(ModelUnavailable):
         judge_with(FakeMessages(error=error)).judge("q", HITS)
+
+
+def test_a_failed_call_still_reports_the_tokens_it_used():
+    for response in (reply("{}", stop_reason="refusal"), reply("{}", stop_reason="max_tokens"), reply("not json")):
+        with pytest.raises(ModelUnavailable) as caught:
+            judge_with(FakeMessages(response)).judge("q", HITS)
+        assert caught.value.usage == {"input_tokens": 1200, "output_tokens": 80}
+    with pytest.raises(ModelUnavailable) as no_usage:  # a call that never reached the API used nothing
+        judge_with(FakeMessages(error=TypeError("no credentials"))).judge("q", HITS)
+    assert no_usage.value.usage == {}

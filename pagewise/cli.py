@@ -25,6 +25,12 @@ def _print_answer(answer, as_json: bool) -> None:
         print()
         for s in answer.sources:
             print(f"  [{s.n}] {s.title} > {s.heading}\n      {s.url}")
+    usage = answer.usage
+    if usage["calls"] == 0:
+        print("\n(refused before the model: no cost)")
+    else:
+        price = "cost unknown" if answer.cost_usd is None else f"about ${answer.cost_usd:.4f}"
+        print(f"\n({usage['calls']} model call(s), {usage['input_tokens']} tokens in, {usage['output_tokens']} out, {price})")
 
 
 def cmd_crawl(args) -> int:

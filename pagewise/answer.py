@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from dataclasses import asdict, dataclass, field
 
-from .config import MAX_QUESTION_CHARS, MIN_SCORE, SOURCE_NAME
+from .config import MAX_QUESTION_CHARS, MIN_SCORE, SOURCE_NAME, cost_usd
 from .llm import Judge, ModelUnavailable
 from .retrieve import Hit, is_covered, retrieve
 from .store import Index
@@ -33,6 +33,10 @@ class Answer:
     status: str
     text: str
     sources: list[Source] = field(default_factory=list)
+    # What this answer cost: model calls, tokens and an estimated dollar figure. A question refused before the
+    # model was ever called has calls 0 and costs nothing.
+    usage: dict = field(default_factory=lambda: {"calls": 0, "input_tokens": 0, "output_tokens": 0})
+    cost_usd: float | None = 0.0
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -79,26 +83,46 @@ def ask(question: str, index: Index, judge: Judge, min_score: float = MIN_SCORE)
     if not is_covered(hits, min_score):
         return Answer(question, NOT_COVERED_STATUS, NOT_COVERED)
 
+    spent: list[dict] = []  # the usage of every model call made for this question
+
+    def finish(status: str, text: str, sources: list[Source] | None = None) -> Answer:
+        usage = {
+            "calls": len(spent),
+            "input_tokens": sum(u.get("input_tokens", 0) for u in spent),
+            "output_tokens": sum(u.get("output_tokens", 0) for u in spent),
+        }
+        cost = cost_usd(getattr(judge, "model", None), usage["input_tokens"], usage["output_tokens"])
+        return Answer(question, status, text, sources or [], usage, cost if spent else 0.0)
+
+    def call(correction: str | None = None) -> dict:
+        try:
+            verdict = judge.judge(question, hits) if correction is None else judge.judge(question, hits, correction=correction)
+        except ModelUnavailable as exc:
+            spent.append(exc.usage)  # a failed call can still have used tokens
+            raise
+        spent.append(verdict.get("usage", {}))
+        return verdict
+
     try:
-        verdict = judge.judge(question, hits)
+        verdict = call()
     except ModelUnavailable:
-        return Answer(question, NEEDS_REVIEW_STATUS, NEEDS_REVIEW)
+        return finish(NEEDS_REVIEW_STATUS, NEEDS_REVIEW)
 
     if not verdict["answerable"] or not verdict["answer"].strip():
-        return Answer(question, NOT_COVERED_STATUS, NOT_COVERED)
+        return finish(NOT_COVERED_STATUS, NOT_COVERED)
 
     # The model must cite real sources it was shown, and may not introduce numbers the sources do not contain.
     # If it slips, it gets exactly one chance to correct itself; a second slip is shown as "couldn't answer".
     problem = _problem(verdict, hits)
     if problem:
         try:
-            verdict = judge.judge(question, hits, correction=problem)
+            verdict = call(correction=problem)
         except ModelUnavailable:
-            return Answer(question, NEEDS_REVIEW_STATUS, NEEDS_REVIEW)
+            return finish(NEEDS_REVIEW_STATUS, NEEDS_REVIEW)
         if not verdict["answerable"] or not verdict["answer"].strip():
-            return Answer(question, NOT_COVERED_STATUS, NOT_COVERED)
+            return finish(NOT_COVERED_STATUS, NOT_COVERED)
         if _problem(verdict, hits):
-            return Answer(question, NEEDS_REVIEW_STATUS, NEEDS_REVIEW)
+            return finish(NEEDS_REVIEW_STATUS, NEEDS_REVIEW)
 
     ids = sorted(set(verdict["source_ids"]))
-    return Answer(question, ANSWERED, verdict["answer"].strip(), [_source(i, hits[i - 1]) for i in ids])
+    return finish(ANSWERED, verdict["answer"].strip(), [_source(i, hits[i - 1]) for i in ids])

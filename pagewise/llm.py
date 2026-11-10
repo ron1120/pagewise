@@ -35,7 +35,14 @@ SCHEMA = {
 
 
 class ModelUnavailable(RuntimeError):
-    """The model could not produce a usable verdict (refused, cut off, malformed, or the API failed)."""
+    """The model could not produce a usable verdict (refused, cut off, malformed, or the API failed).
+
+    `usage` holds the tokens a failed call still used, so its cost is not lost.
+    """
+
+    def __init__(self, message: str, usage: dict | None = None) -> None:
+        super().__init__(message)
+        self.usage = usage or {}
 
 
 class Judge(Protocol):
@@ -78,10 +85,15 @@ class ClaudeJudge:
         except (anthropic.AnthropicError, TypeError) as exc:
             raise ModelUnavailable(f"model call failed: {exc.__class__.__name__}") from exc
 
+        raw_usage = getattr(response, "usage", None)
+        usage = {
+            "input_tokens": int(getattr(raw_usage, "input_tokens", 0) or 0),
+            "output_tokens": int(getattr(raw_usage, "output_tokens", 0) or 0),  # includes any thinking tokens
+        }
         if response.stop_reason == "refusal":
-            raise ModelUnavailable("the model declined to answer")
+            raise ModelUnavailable("the model declined to answer", usage)
         if response.stop_reason == "max_tokens":
-            raise ModelUnavailable("the model's answer was cut off")
+            raise ModelUnavailable("the model's answer was cut off", usage)
         text = next((b.text for b in response.content if b.type == "text"), "")
         try:
             verdict = json.loads(text)
@@ -89,6 +101,7 @@ class ClaudeJudge:
                 "answerable": bool(verdict["answerable"]),
                 "answer": str(verdict["answer"]),
                 "source_ids": [int(i) for i in verdict["source_ids"]],
+                "usage": usage,
             }
         except (ValueError, KeyError, TypeError) as exc:
-            raise ModelUnavailable("the model's answer could not be read") from exc
+            raise ModelUnavailable("the model's answer could not be read", usage) from exc

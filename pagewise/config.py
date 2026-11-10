@@ -33,3 +33,23 @@ MAX_TOKENS = 2000
 MAX_QUESTION_CHARS = 500
 # Opt-in server-side refusal fallback (Claude API only). Off by default.
 FALLBACKS = os.environ.get("PAGEWISE_FALLBACKS", "") == "1"
+
+
+# USD per million tokens (input, output). These are Anthropic's published prices for each model, used only to ESTIMATE
+# what an answer cost. Check the current price list before quoting a figure, and add a model here to price it.
+PRICES = {
+    "claude-sonnet-5-5": (2.00, 10.00),
+    "claude-sonnet-5": (2.00, 10.00),
+    "claude-opus-5-5": (4.00, 20.00),
+    "claude-opus-5": (5.00, 25.00),
+    "claude-fable-5-1": (10.00, 50.00),
+    "claude-haiku-5-5": (0.10, 0.50),  # for prompts up to 100K tokens
+}
+
+
+def cost_usd(model: str | None, input_tokens: int, output_tokens: int) -> float | None:
+    """Estimated cost in dollars, or None when the model is not in PRICES."""
+    if model not in PRICES:
+        return None
+    per_input, per_output = PRICES[model]
+    return (input_tokens * per_input + output_tokens * per_output) / 1_000_000
