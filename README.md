@@ -84,7 +84,7 @@ off-topic question scores at most 0.21 against a gate of 0.28, while the weakest
   Claude is not measured until `pagewise eval --live` has been run.
 - The gate threshold was tuned on the same 28 questions it is scored on. Treat 28/28 as "works on the demo set", not as
   a general accuracy figure.
-- Only three sources have been tried: a small portfolio site and a code repository (both with the real model, as spot checks) and the Argo CD docs (offline retrieval only).
+- Only three sources have been tried: a small portfolio site and the Argo CD docs (both offline, retrieval only) and a code repository (the only one used with the real model, as spot checks).
 
 ### A third corpus: the Argo CD documentation
 
