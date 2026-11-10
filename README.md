@@ -59,7 +59,7 @@ If the model is unavailable, refuses, runs out of tokens or returns something un
 
 ## Evaluation
 
-`evals/golden.json` holds 28 questions about the demo site: 18 answerable from one page, 6 off-topic (must be
+`evals/golden.json` holds 28 questions about the demo site (a second file, `evals/golden_argocd.json`, covers a different site, see below): 18 answerable from one page, 6 off-topic (must be
 refused before the model), 4 on-topic but not on the site (the model must decline).
 
 ```bash
@@ -84,7 +84,44 @@ off-topic question scores at most 0.21 against a gate of 0.28, while the weakest
   Claude is not measured until `pagewise eval --live` has been run.
 - The gate threshold was tuned on the same 28 questions it is scored on. Treat 28/28 as "works on the demo set", not as
   a general accuracy figure.
-- Only two sources have been tried: a small portfolio site and a code repository.
+- Only three sources have been tried: a small portfolio site and a code repository (both with the real model, as spot checks) and the Argo CD docs (offline retrieval only).
+
+### A third corpus: the Argo CD documentation
+
+To check that pagewise is not tuned to one site, I ran it on a site it was never built or tuned for: the public Argo CD docs
+(Apache-2.0, `robots.txt` allows crawling). `evals/golden_argocd.json` holds 23 questions written *before* the first
+run, each checked against the page text: 17 answerable from one page, 3 off-topic, and 3 that sound on-topic but the docs do
+not cover (pricing, a phone number, Nomad; I confirmed none of those words appear in the crawled pages).
+
+```bash
+python -m pagewise crawl https://argo-cd.readthedocs.io/en/stable/ --under-start-path --exclude /snyk/ --max-pages 600 --out data/argocd/pages.json
+python -m pagewise index --pages data/argocd/pages.json --index data/argocd/index
+python -m pagewise eval --index data/argocd/index --golden evals/golden_argocd.json      # offline; add --live to call Claude
+```
+
+I did not commit the crawled pages (they are someone else's documentation); the crawl above reproduces them. The docs change
+over time, so a later crawl can score differently. Crawled 2026-11-10: 456 pages, 4,266 chunks, indexed in about 30 seconds.
+The crawl skips `/snyk/` because 88% of that site's text (18.5 of 21 million characters) is generated vulnerability reports, not documentation.
+
+**Result with the default settings, no tuning: 20 of 23 pass offline.**
+
+| | |
+|---|---|
+| Off-topic questions refused before the model | 3 of 3 (they scored at most 0.17 against the 0.28 gate) |
+| Answerable questions where the right page was in the top 4 | 14 of 17 |
+| On-topic but not covered by the docs | not checked offline: they scored 0.49 to 0.71, far above the gate, so only the model can refuse them |
+
+The three misses, and what they actually are:
+- **"What are the main components in the Argo CD architecture?"** Retrieval returned `developer-guide/architecture/components`, a page
+  about exactly that. The docs have several architecture pages and my question named only one, so this is partly a question that was
+  too narrow. I counted it as a miss anyway and did not edit the golden file.
+- **"How do I shard clusters across application controller replicas?"** The top five results were all from a design *proposal*
+  page about dynamic rebalancing, which repeats the question's words; the guide that answers it ranked 12th. This is a real weakness.
+- **"Can the default AppProject be deleted?"** Retrieval matched the word "deleted" and returned deletion pages. The answer is
+  one short sentence on the projects page, which ranked 7th. Also a real weakness.
+
+The live eval has not been run on this corpus either, so none of this says how well Claude answers: it only measures whether the
+right page is found. Findings worth acting on: down-weight design proposals against guides, and give very short sections more weight.
 
 ## Cost
 
@@ -104,6 +141,10 @@ Cost per answer depends on the model (`PAGEWISE_MODEL`), how many passages are s
 
 ## Known limits
 
+- On a large docs site, design proposals and pages that repeat the question's words can outrank the guide that answers it
+  (see the Argo CD results above).
+- The "not covered" gate catches off-topic questions, not on-topic ones the site does not answer: those score high on retrieval,
+  so only the model can refuse them. The live eval is what measures that.
 - Retrieval can miss when a page's text is only an unlabeled list. "What technologies does Ron work with?" finds the
   skills list; "what is Ron's tech stack?" does not.
 - Keyword search scans every chunk on each question. That is fine for a site of hundreds of pages, not for a huge corpus.
@@ -176,7 +217,7 @@ pagewise/evals.py      golden-question runner (offline and live)
 pagewise/server.py     FastAPI app, rate limit, chat page
 pagewise/cli.py        crawl, docs, index, ask, chat, serve, eval
 evals/golden.json      the 28 golden questions
-tests/                 71 offline tests (fake site, fake model, no network)
+tests/                 79 offline tests (fake site, fake model, no network)
 ```
 
 ## Roadmap

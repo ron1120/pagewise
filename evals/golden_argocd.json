@@ -1,0 +1,202 @@
+[
+  {
+    "question": "How do I get the initial admin password for Argo CD?",
+    "expect": "answer",
+    "pages": [
+      "/en/stable/getting_started/"
+    ],
+    "contains": [
+      "initial-password"
+    ]
+  },
+  {
+    "question": "How can I reach the Argo CD API server with kubectl port-forward?",
+    "expect": "answer",
+    "pages": [
+      "/en/stable/getting_started/"
+    ],
+    "contains": [
+      "port-forward"
+    ]
+  },
+  {
+    "question": "What are the main components in the Argo CD architecture?",
+    "expect": "answer",
+    "pages": [
+      "/en/stable/operator-manual/architecture/"
+    ],
+    "contains": [
+      "application controller"
+    ]
+  },
+  {
+    "question": "What does the Argo CD repository server do?",
+    "expect": "answer",
+    "pages": [
+      "/en/stable/operator-manual/architecture/"
+    ],
+    "contains": [
+      "cache"
+    ]
+  },
+  {
+    "question": "How do I order the deployment of resources with sync waves?",
+    "expect": "answer",
+    "pages": [
+      "/en/stable/user-guide/sync-waves/"
+    ],
+    "contains": [
+      "sync-wave"
+    ]
+  },
+  {
+    "question": "Which wave are resources in by default?",
+    "expect": "answer",
+    "pages": [
+      "/en/stable/user-guide/sync-waves/"
+    ],
+    "contains": [
+      "0"
+    ]
+  },
+  {
+    "question": "Which port exposes the application controller metrics?",
+    "expect": "answer",
+    "pages": [
+      "/en/stable/operator-manual/metrics/"
+    ],
+    "contains": [
+      "8082"
+    ]
+  },
+  {
+    "question": "How do I back up Argo CD?",
+    "expect": "answer",
+    "pages": [
+      "/en/stable/operator-manual/disaster_recovery/"
+    ],
+    "contains": [
+      "export"
+    ]
+  },
+  {
+    "question": "How do I run Argo CD in high availability mode?",
+    "expect": "answer",
+    "pages": [
+      "/en/stable/operator-manual/high_availability/"
+    ],
+    "contains": [
+      "HA"
+    ]
+  },
+  {
+    "question": "How do I shard clusters across application controller replicas?",
+    "expect": "answer",
+    "pages": [
+      "/en/stable/operator-manual/high_availability/"
+    ],
+    "contains": [
+      "ARGOCD_CONTROLLER_REPLICAS"
+    ]
+  },
+  {
+    "question": "What are the built-in RBAC roles?",
+    "expect": "answer",
+    "pages": [
+      "/en/stable/operator-manual/rbac/"
+    ],
+    "contains": [
+      "readonly"
+    ]
+  },
+  {
+    "question": "How can an application create its destination namespace automatically?",
+    "expect": "answer",
+    "pages": [
+      "/en/stable/user-guide/sync-options/"
+    ],
+    "contains": [
+      "CreateNamespace=true"
+    ]
+  },
+  {
+    "question": "How do I install the argocd CLI on a Mac?",
+    "expect": "answer",
+    "pages": [
+      "/en/stable/cli_installation/"
+    ],
+    "contains": [
+      "brew"
+    ]
+  },
+  {
+    "question": "What is the difference between target state and live state?",
+    "expect": "answer",
+    "pages": [
+      "/en/stable/core_concepts/"
+    ],
+    "contains": [
+      "git"
+    ]
+  },
+  {
+    "question": "Can the default AppProject be deleted?",
+    "expect": "answer",
+    "pages": [
+      "/en/stable/user-guide/projects/"
+    ],
+    "contains": [
+      "modified"
+    ]
+  },
+  {
+    "question": "How do I configure automated sync for an application?",
+    "expect": "answer",
+    "pages": [
+      "/en/stable/user-guide/auto_sync/"
+    ],
+    "contains": [
+      "automated"
+    ]
+  },
+  {
+    "question": "What does Argo CD Notifications do?",
+    "expect": "answer",
+    "pages": [
+      "/en/stable/operator-manual/notifications/"
+    ],
+    "contains": [
+      "trigger"
+    ]
+  },
+  {
+    "question": "What is the weather in Paris today?",
+    "expect": "refuse",
+    "refused_by": "gate"
+  },
+  {
+    "question": "Write me a poem about the ocean.",
+    "expect": "refuse",
+    "refused_by": "gate"
+  },
+  {
+    "question": "Who won the 2022 football world cup?",
+    "expect": "refuse",
+    "refused_by": "gate"
+  },
+  {
+    "question": "How much does Argo CD cost per month?",
+    "expect": "refuse",
+    "refused_by": "model"
+  },
+  {
+    "question": "What is the phone number for Argo CD support?",
+    "expect": "refuse",
+    "refused_by": "model"
+  },
+  {
+    "question": "Can Argo CD deploy applications to a Nomad cluster?",
+    "expect": "refuse",
+    "refused_by": "model"
+  }
+]

@@ -77,3 +77,35 @@ def test_page_round_trips_through_json():
 def test_a_heading_inside_a_card_does_not_become_the_heading_of_the_next_card():
     html = "<main><ul><li><h3>Card A</h3><p>text a</p></li><li><h3>Card B</h3><p>text b</p></li></ul></main>"
     assert extract("u", html).sections == [("u", "Card A text a"), ("u", "Card B text b")]
+
+
+def test_under_start_path_keeps_a_versioned_site_to_one_copy():
+    site = {
+        "https://x.test/en/stable/": (200, "text/html", "<main><p>stable home</p><a href='/en/stable/a/'>a</a><a href='/en/latest/a/'>latest</a></main>"),
+        "https://x.test/en/stable/a/": (200, "text/html", "<main><p>stable a</p></main>"),
+        "https://x.test/en/latest/a/": (200, "text/html", "<main><p>latest a</p></main>"),
+    }
+    everything = crawl("https://x.test/en/stable/", fetch=_site(site))
+    stable_only = crawl("https://x.test/en/stable/", fetch=_site(site), under_start_path=True)
+    assert len(everything) == 3
+    assert sorted(p.url for p in stable_only) == ["https://x.test/en/stable/", "https://x.test/en/stable/a/"]
+
+
+def test_a_page_reachable_at_two_urls_is_stored_once():
+    site = {
+        "https://x.test/": (200, "text/html", "<main><p>home</p><a href='/guide'>g</a><a href='/guide/'>g2</a></main>"),
+        "https://x.test/guide": (200, "text/html", "<main><p>the same guide text</p></main>"),
+        "https://x.test/guide/": (200, "text/html", "<main><p>the same guide text</p></main>"),
+    }
+    assert len(crawl("https://x.test/", fetch=_site(site))) == 2  # home + one copy of the guide
+
+
+def test_excluded_path_fragments_are_not_crawled():
+    site = {
+        "https://x.test/": (200, "text/html", "<main><p>home</p><a href='/docs/a'>a</a><a href='/snyk/report'>r</a></main>"),
+        "https://x.test/docs/a": (200, "text/html", "<main><p>a doc</p></main>"),
+        "https://x.test/snyk/report": (200, "text/html", "<main><p>generated report</p></main>"),
+    }
+    assert len(crawl("https://x.test/", fetch=_site(site))) == 3
+    kept = crawl("https://x.test/", fetch=_site(site), exclude=("/snyk/",))
+    assert sorted(p.url for p in kept) == ["https://x.test/", "https://x.test/docs/a"]

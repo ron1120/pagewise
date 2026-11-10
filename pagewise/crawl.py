@@ -5,6 +5,7 @@ Polite by default: it honours robots.txt, stays on one host, identifies itself a
 
 from __future__ import annotations
 
+import hashlib
 import re
 import time
 import xml.etree.ElementTree as ET
@@ -143,8 +144,15 @@ def crawl(
     delay: float = 0.3,
     fetch: Fetch = default_fetch,
     respect_robots: bool = True,
+    under_start_path: bool = False,
+    exclude: tuple[str, ...] = (),
 ) -> list[Page]:
-    """Breadth-first crawl of one host, starting at start_url (and its sitemap, if it has one)."""
+    """Breadth-first crawl of one host, starting at start_url (and its sitemap, if it has one).
+
+    under_start_path keeps the crawl inside the start URL's folder, for versioned docs where /en/stable/ and
+    /en/latest/ are two copies of the same site. Pages whose text was already seen (for example /page and /page/)
+    are stored once. exclude lists path fragments to skip, such as generated reports that are not documentation.
+    """
     start = normalize(start_url)
     parsed = urlparse(start)
     origin = f"{parsed.scheme}://{parsed.netloc}"
@@ -152,11 +160,17 @@ def crawl(
 
     queue: deque[str] = deque([start, *_sitemap_urls(origin, fetch)])
     seen: set[str] = set()
+    seen_text: set[str] = set()
     pages: list[Page] = []
+    root = parsed.path if under_start_path else ""
 
     while queue and len(pages) < max_pages:
         url = queue.popleft()
         if url in seen or urlparse(url).netloc != parsed.netloc or _SKIP_EXT.search(urlparse(url).path):
+            continue
+        if root and not urlparse(url).path.startswith(root):
+            continue
+        if any(fragment in urlparse(url).path for fragment in exclude):
             continue
         seen.add(url)
         if robots is not None and not robots.can_fetch(USER_AGENT, url):
@@ -168,7 +182,9 @@ def crawl(
         if status != 200 or "html" not in content_type.lower():
             continue
         page = extract(url, body)
-        if page.sections:
+        digest = hashlib.sha1("\n".join(t for _, t in page.sections).encode()).hexdigest()
+        if page.sections and digest not in seen_text:
+            seen_text.add(digest)
             pages.append(page)
         queue.extend(link for link in _links(url, body) if link not in seen)
         time.sleep(delay if fetch is default_fetch else 0)

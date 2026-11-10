@@ -34,7 +34,7 @@ def _print_answer(answer, as_json: bool) -> None:
 
 
 def cmd_crawl(args) -> int:
-    pages = crawl(args.url, max_pages=args.max_pages, delay=args.delay)
+    pages = crawl(args.url, max_pages=args.max_pages, delay=args.delay, under_start_path=args.under_start_path, exclude=tuple(args.exclude))
     save_pages(pages, args.out)
     print(f"Crawled {len(pages)} pages -> {args.out}")
     for p in pages:
@@ -106,6 +106,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("url")
     p.add_argument("--max-pages", type=int, default=60)
     p.add_argument("--delay", type=float, default=0.3, help="seconds between requests")
+    p.add_argument("--under-start-path", action="store_true", help="stay inside the start URL's folder (for versioned docs)")
+    p.add_argument("--exclude", action="append", default=[], metavar="FRAGMENT", help="skip URLs whose path contains this (repeatable)")
     p.add_argument("--out", default=PAGES_FILE)
     p.set_defaults(func=cmd_crawl)
 
