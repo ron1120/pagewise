@@ -1,4 +1,4 @@
-# pagewise
+# pagewise: RAG Chat Bot for Websites
 
 Ask questions about a website and get answers **only from its own pages**, each with the pages it came from.
 If the site doesn't say, pagewise says so instead of guessing.
