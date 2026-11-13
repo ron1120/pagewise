@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 
-USER_AGENT = "pagewise/0.1 (+https://github.com/ron1120/pagewise)"
+USER_AGENT = "pagewise/0.1 (+https://github.com/rronss/pagewise)"
 
 # Where the crawled pages and the vector index live (both are rebuilt by the CLI).
 DATA_DIR = os.environ.get("PAGEWISE_DATA_DIR", "data")

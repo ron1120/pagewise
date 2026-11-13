@@ -196,7 +196,7 @@ docker run -p 8010:8000 -e ANTHROPIC_API_KEY \
 The entrypoint builds the index when the container starts, then serves the chat page and `POST /api/ask`. Citations
 link to `--base-url` plus the file path. The chat page uses relative URLs, so it also works behind a proxy path such
 as `/assistant/`. A working example is the Task Manager app's `docker-compose.yml`
-(`github.com/ron1120/task-manager-infrastructure`), where it is the `pagewise` service.
+(`github.com/rronss/task-manager-infrastructure`), where it is the `pagewise` service.
 
 ## Crawling politely
 
